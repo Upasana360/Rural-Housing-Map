@@ -1,0 +1,400 @@
+<html>
+
+<head>
+  <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+  <meta name='viewport' content='initial-scale=1, maximum-scale=1,user-scalable=no'>
+  <title>Sample Application</title>
+  <link rel='stylesheet' href='https://js.arcgis.com/3.25/esri/css/esri.css' />
+  <style>
+    html,
+    body,
+    #mapDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #search {
+      display: block;
+      /* top: 1.25em; */
+      margin-top: 21px;
+      left: 3.625em;
+      right: 0.625em;
+      position: absolute;
+      height: 3.75em;
+      width: auto;
+      font-size: 1em;
+      line-height: 1.25em;
+      z-index: 3;
+    }
+
+    #search button {
+
+      background-color: blue;
+      color: white;
+    }
+
+    #mapDiv {
+      position: relative;
+      margin-top: 0;
+      /* width: 50%; */
+      /* border:2px solid rgb(80, 16, 27); */
+    }
+
+    #basemap {
+      position: absolute;
+      left: 90%;
+      height: 80px;
+      width: 100px;
+      margin-top: 70px;
+      /* border:2px solid red; */
+
+    }
+
+    #mainDiv {
+      /* border:2px solid black; */
+      display: block;
+      top: 1.25em;
+      left: 85%;
+      right: 0.625em;
+      position: absolute;
+      height: 100%;
+      width: 8.9%;
+      font-size: 1em;
+      line-height: 1.25em;
+      z-index: 3;
+    }
+
+    /* #esriPopup .sizer {
+    position: relative;
+    width: 350px;
+    z-index: 1;
+    } */
+    #header_content {
+      background: no-repeat;
+      background-color: #00008b;
+      height: 11%;
+      width: 100%;
+      margin: 0px;
+      background-size: 100% 100%;
+    }
+
+    /* Social Icons */
+    #social_side_links {
+      position: fixed;
+      top: 20em;
+      right: 0;
+      padding: 0;
+      list-style: none;
+      z-index: 99999999;
+    }
+
+    #social_side_links li a {
+      display: block;
+    }
+
+    #social_side_links li a img {
+      display: block;
+      max-width: 40px;
+      padding: 10px;
+      -webkit-transition: background .2s ease-in-out;
+      -moz-transition: background .2s ease-in-out;
+      -o-transition: background .2s ease-in-out;
+      transition: background .2s ease-in-out;
+    }
+
+    #social_side_links li a:hover img {
+      background: rgba(0, 0, 0, .2);
+    }
+  </style>
+  <style>
+    /* The Modal (background) */
+    .modal {
+      display: none;
+      /* Hidden by default */
+
+      padding-top: 100px;
+      /* Location of the box */
+      /* left: 900; */
+      top: 50;
+      width: 800;
+      /* Full width */
+      height: 500;
+      /* Full height */
+      overflow: 0;
+      /* Enable scroll if needed */
+      position: absolute;
+      z-index: 6;
+      background-color: white;
+    }
+
+    /* Modal Content */
+    .modal-content {
+      position: inherit;
+      background-color: white;
+      margin: auto;
+      padding: 0;
+      border: 1px solid #888;
+      width: auto;
+      height: auto;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+      z-index: 6;
+      top: 50;
+    }
+
+    /* The Close Button */
+    .close {
+      color: blue;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+
+    .modal-body {
+      padding: 2px 16px;
+    }
+  </style>
+  <script src='https://js.arcgis.com/3.25/'></script>
+  <script>
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        let data = this.responseText;
+        let allData = JSON.parse(data);
+
+
+        var map;
+
+        require(['esri/dijit/BasemapLayer', 'esri/dijit/Basemap',
+          'esri/map', 'esri/geometry/Extent', 'esri/SpatialReference',
+          'esri/layers/ArcGISDynamicMapServiceLayer', 'esri/layers/ArcGISTiledMapServiceLayer',
+          'esri/graphic', 'esri/layers/GraphicsLayer', "esri/geometry/Point", "esri/symbols/SimpleMarkerSymbol",
+          "esri/Color", "esri/InfoTemplate", 'esri/dijit/Search', 'esri/dijit/BasemapToggle'],
+
+          function (BasemapLayer, Basemap, Map, Extent, SpatialReference,
+            ArcGISDynamicMapServiceLayer, ArcGISTiledMapServiceLayer, Graphic, GraphicsLayer,
+            Point, SimpleMarkerSymbol, Color, InfoTemplate, Search, BasemapToggle) {
+            var nobasemap = new Basemap({ layers: [new BasemapLayer({ url: 'http://services.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer', opacity: 100 })] });
+
+            map = new Map('mapDiv',
+              {
+                logo: false,
+                showAttribution: false,
+                //center: [85.824539, 20.296059],//Longitude,Latitude //BBSR
+                center: [84.803467, 20.940920],//Odisha
+                zoom: 20,
+                basemap: 'topo-vector',
+
+              });
+            map.addLayer(new ArcGISDynamicMapServiceLayer('https://mapservice.gov.in/gismapservice/rest/services/BharatMapService/Admin_Boundary_GramPanchayat/MapServer?token=6P0v46XYQlat6TS36DCtm2VUjuW1Ox1XtD2XKtIkunbFPPmRCMBCTOuJn23p0PwL'));
+            // map.addLayer(new ArcGISDynamicMapServiceLayer('https://mapservice.gov.in/gismapservice/rest/services/BharatMapService/State_Boundary/MapServer?Token=bUp-lyEbaN02fmtkJQvgBem_vipBch9cXhV6Q_b8oDAXv6S_XI1ozAKPOu7Uh0s9'));
+            //map.addLayer(new ArcGISDynamicMapServiceLayer('https://mapservice.gov.in/gismapservice/rest/services/BharatMapService/District_Boundary/MapServer?Token=atm47KCxpMF14x35xaRQmmlJkm2lRKx1DPfRH0rfOFh9YPo4XWlVEJ25P8sn2D_g'));
+            //map.addLayer(new ArcGISDynamicMapServiceLayer('https://mapservice.gov.in/gismapservice/rest/services/BharatMapService/Block_Boundary/MapServer?Token=cdlDJ8KyFmING4oLSax5uVKbB0M3MltzpVmo-5FOCvi8jK1CC5foV5s37NOkMAZj'));
+
+
+            //  map.setExtent(new Extent(66.62, 5.23, 98.87, 38.59, new SpatialReference({ wkid: 4326 })),true);
+            map.setExtent(new Extent(80.1, 16.5, 91.1, 23.5, new SpatialReference({ wkid: 4326 })), true);
+
+            var search = new Search({
+              map: map
+            }, "search");
+            search.startup()
+
+            var satellite = new BasemapToggle({
+              map: map,
+              basemap: "topo-vector"
+            }, "topoVector");
+            satellite.startup();
+
+            var hybrid = new BasemapToggle({
+              map: map,
+              basemap: "hybrid"
+            }, "hybrid");
+            hybrid.startup();
+
+            var streetsNight = new BasemapToggle({
+              map: map,
+              basemap: "streets-night-vector"
+            }, "streetsNight");
+            streetsNight.startup();
+
+            var osm = new BasemapToggle({
+              map: map,
+              basemap: "osm"
+            }, "osm");
+            osm.startup();
+
+            var streesNavigation = new BasemapToggle({
+              map: map,
+              basemap: "streets-navigation-vector"
+            }, "streesNavigation");
+            streesNavigation.startup();
+
+            var darkGray = new BasemapToggle({
+              map: map,
+              basemap: "dark-gray"
+            }, "darkGray");
+            darkGray.startup();
+
+            var graphicsLayer = new GraphicsLayer()
+            var i = 1;
+
+            var red = new Color([255, 0, 0, 0.5])
+
+
+            allData.forEach(data => {
+
+              if (data.LONGITUDE == NaN || data.LATITUDE == NaN || data.LATITUDE == undefined || data.LONGITUDE == undefined) {
+
+              } else {
+                var simpleMarkerSymbol = new SimpleMarkerSymbol().setStyle(SimpleMarkerSymbol.STYLE_CIRCLE).setColor(data.COLOR).setSize(10)
+
+                var point = new Point(data.LONGITUDE, data.LATITUDE, map.spatialReference);
+
+                var attr = {
+                  "Xcoord": data.LONGITUDE,
+                  "Ycoord": data.LATITUDE,
+                  "Serial": data.Serial,
+                  "District": data.District,
+                  "Block": data.Block,
+                  "Panchayat": data.Panchayat,
+                  "Panchayat1": data.Panchayat1,
+                  "Village": data.Village,
+                  "Scheme": data.Scheme,
+                  "Year_of_SA": data.Year_of_SA,
+                  "Year": data.Year,
+                  "Name": data.Name,
+                  "Father_HU": data.Father_HU,
+                  "Categories": data.Categories,
+                  "Regd_no": data.Regd_no,
+                  "Photo": data.Photo,
+                  "Entry_Date": data.Entry_Date,
+                  "Entry_Time": data.Entry_Time
+                };
+                var infoTemplate = new InfoTemplate("<span style='font-size:15px'>Crop Locations", "<span style='font-size:15px'>Latitude : ${Ycoord}</span> <br/><span style='font-size:15px'>Longitude : ${Xcoord} </span><br/><span style='font-size:15px'>serial:${Serial}</span></br><span style='font-size:15px'>District : ${District}</span></br><span style='font-size:15px'>Block:${Block}</span><br/><span style='font-size:15px'>Panchayat:${Panchayat}</span></br><span style='font-size:15px'>Panchayat1:${Panchayat1}</span></br><span style='font-size:15px'>Village:${Village}</span><br/><span style='font-size:15px'>Scheme:${Scheme}</span><br/><span style='font-size:15px'>Year_of_SA:${Year_of_SA}</span></br><span style='font-size:15px'>Year:${Year}</span></br><span style='font-size:15px'>Father_HU:${Father_HU}</span></br><span style='font-size:15px'>Categories:${Categories}</span></br><span style='font-size:15px'>Regd_no:${Regd_no}</span></br><span style='font-size:15px'>Photo:${Photo}</span><br/><span style='font-size:15px'>Entry_Date:${Entry_Date}</span></br><span style='font-size:15px'>Entry_Time:${Entry_Time}</span>");
+
+                var pointGraphic = new Graphic(point, simpleMarkerSymbol, attr, infoTemplate)
+
+                graphicsLayer.add(pointGraphic);
+              }
+            })
+
+            map.addLayer(graphicsLayer);
+          });
+      }
+    }
+    httpRequest.open('GET', '/test', true)
+    httpRequest.send();
+  </script>
+</head>
+
+<body>
+
+  <div id='mapDiv'>
+    <div class="header_content">
+      <img src="image/Ruralhousing.jpg" alt="Header Image" style="width:100%;height:70px;">
+    </div>
+    <!-- <div id="search"></div>
+            <div id="mainDiv">
+                    <ul>
+                        <li id="topoVector"></li>
+                        <li id="osm"></li>
+                        <li id="streetsNight"></li>
+                        <li id="hybrid"></li>
+                        <li id="streesNavigation"></li>
+                        <li id="darkGray"></li>
+                    </ul>
+            </div> -->
+    <div id="search" style="margin-top: 70px;"></div>
+    <div id='mainDiv'>
+
+      <div id="basemap"><button id="myBtn" style="position:absolute; /* Stay in place */
+          z-index: 5;">Basemap</button></div>
+      <!-- modal start -->
+
+      <!-- The Modal -->
+      <div id="myModal" class="modal" style="background:transparent;">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+          <div class="modal-header" style="height:30px;background-color:blue;">
+            <span class="close" style="color:white;">&times;</span>
+
+          </div>
+          <div class="modal-body">
+            <div id="mainDiv">
+              <div>
+                <li id="topoVector"></li>
+                <li id="osm"></li>
+                <li id="streetsNight"></li>
+                <!-- </div> -->
+                <!-- <div style="float:right;"> -->
+                <li id="hybrid"></li>
+                <li id="streesNavigation"></li>
+                <li id="darkGray"></li>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+
+          </div>
+        </div>
+
+      </div>
+      <ul id="social_side_links">
+
+        <li style="background-color: #001033;" title="Measurement"><a id="btnMeasure" href="#" target="">
+            <img class="grow imgx" src="image/measure.png" /></a></li>
+        <li style="background-color: #003176;" title="Legend"><a id="btnToc" href="#" target="">
+            <img class="grow imgx" src="image/legend.PNG" />
+          </a></li>
+        <li style="background-color: #001033;" title="Full Extent"><a id="btnFullExtent" href="#" target="">
+            <img class="grow imgx" src="image/fullextent.PNG" /></a></li>
+        <li style="background-color: #003176;" title="Clear"><a id="btnClear" href="#" target="">
+            <img class="grow imgx" src="image/clear.PNG" /></a></li>
+        <li style="background-color: #001033;" title="Print"><a id="btnPrint" href="#" target="">
+            <img class="grow imgx" src="image/print.png" /></a></li>
+
+      </ul>
+    </div>
+    <script>
+      // Get the modal
+      var modal = document.getElementById("myModal");
+
+      // Get the button that opens the modal
+      var btn = document.getElementById("myBtn");
+
+      // Get the <span> element that closes the modal
+      var span = document.getElementsByClassName("close")[0];
+
+      // When the user clicks the button, open the modal 
+      btn.onclick = function () {
+        modal.style.display = "block";
+      }
+
+      // When the user clicks on <span> (x), close the modal
+      span.onclick = function () {
+        modal.style.display = "none";
+      }
+
+      // When the user clicks anywhere outside of the modal, close it
+      window.onclick = function (event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      }
+    </script>
+  </div>
+
+</body>
+
+</html>
